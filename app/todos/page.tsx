@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import TodoList from '@/components/todos/TodoList'
 import AddTodoForm from '@/components/todos/AddTodoForm'
 import { createClient } from '@/lib/supabase/client'
-import { toast } from '@/hooks/use-toast'
+import { useToast } from '@/hooks/use-toast'
 
 export interface Todo {
   id: string
@@ -24,6 +24,7 @@ export default function TodosPage() {
   const [todos, setTodos] = useState<Todo[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all')
+  const { toast } = useToast()
 
   useEffect(() => {
     loadTodos()

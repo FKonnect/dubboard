@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { toast } from '@/hooks/use-toast'
+import { useToast } from '@/hooks/use-toast'
 
 export default function Header() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+  const { toast } = useToast()
 
   useEffect(() => {
     const supabase = createClient()

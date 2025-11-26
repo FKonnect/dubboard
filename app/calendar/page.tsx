@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import CalendarView from '@/components/calendar/CalendarView'
 import EventForm from '@/components/calendar/EventForm'
 import { createClient } from '@/lib/supabase/client'
-import { toast } from '@/hooks/use-toast'
+import { useToast } from '@/hooks/use-toast'
 
 export interface CalendarEvent {
   id: string
@@ -27,6 +27,7 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [showEventForm, setShowEventForm] = useState(false)
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
+  const { toast } = useToast()
 
   useEffect(() => {
     loadEvents()
