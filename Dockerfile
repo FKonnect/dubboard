@@ -1,5 +1,5 @@
 # Use the official Node.js runtime as the base image
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -9,8 +9,8 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json* ./
-# Install dependencies
-RUN npm ci
+# Install dependencies - use npm install if npm ci fails (e.g., if package-lock.json is out of sync)
+RUN if [ -f package-lock.json ]; then npm ci || npm install; else npm install; fi
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -20,6 +20,12 @@ COPY . .
 
 # Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED 1
+
+# Build arguments for environment variables (optional, can be overridden at runtime)
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 # Build the Next.js app
 RUN npm run build
