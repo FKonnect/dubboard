@@ -1,0 +1,61 @@
+# Supabase Configuration
+# This file documents the configuration for the self-hosted Supabase instance
+# Most configuration is done via environment variables in docker-compose.yml
+
+[api]
+enabled = true
+port = 8000
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 5432
+major_version = 15
+pooler = {
+  enabled = false,
+  port = 5432,
+  pool_mode = "transaction",
+  default_pool_size = 20,
+  max_client_conn = 100
+}
+
+[studio]
+enabled = true
+port = 3000
+api_url = "http://kong:8000"
+
+[inbucket]
+enabled = false
+port = 5433
+smtp_port = 5434
+pop3_port = 5435
+
+[storage]
+enabled = true
+file_size_limit = 52428800
+image_transformation = {
+  enabled = true,
+  quality = 80
+}
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
+enable_signup = true
+enable_confirmations = false
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+
+[realtime]
+enabled = true
+ip_version = "ipv4"
+
+[analytics]
+enabled = false
+
