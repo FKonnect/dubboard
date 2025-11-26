@@ -7,7 +7,7 @@ This guide provides step-by-step instructions for deploying Dubboard to your Syn
 - Synology NAS with Docker installed
 - SSH access to your NAS (or use Synology's Docker GUI)
 - Your NAS IP address (e.g., `192.168.1.100`)
-- Ports available: 3000, 8000, 8001, 8002, 54322
+- Ports available: 3000, 8002, 8003, 8004, 54322
 
 ## Step 1: Prepare Environment Variables
 
@@ -17,9 +17,9 @@ Create or update your `.env` file in the project root. Replace `localhost` with 
 
 ```bash
 # Supabase URL - Use your NAS IP address
-NEXT_PUBLIC_SUPABASE_URL=http://YOUR_NAS_IP:8000
-SUPABASE_PUBLIC_URL=http://YOUR_NAS_IP:8000
-API_EXTERNAL_URL=http://YOUR_NAS_IP:8000
+NEXT_PUBLIC_SUPABASE_URL=http://YOUR_NAS_IP:8004
+SUPABASE_PUBLIC_URL=http://YOUR_NAS_IP:8004
+API_EXTERNAL_URL=http://YOUR_NAS_IP:8004
 SITE_URL=http://YOUR_NAS_IP:3000
 
 # Generated secure secrets (keep these secure!)
@@ -169,8 +169,8 @@ All containers should show "Up" status.
 
 Ensure these ports are open on your NAS:
 - **3000**: Next.js application
-- **8000**: Supabase API (Kong)
-- **8001**: Kong Admin API
+- **8004**: Supabase API (Kong)
+- **8003**: Kong Admin API
 - **8002**: Supabase Studio
 - **54322**: PostgreSQL (optional, for direct DB access)
 
@@ -204,7 +204,7 @@ docker-compose up -d --build
 
 2. **Check port conflicts:**
    ```bash
-   netstat -tuln | grep -E '3000|8000|8001|8002|54322'
+   netstat -tuln | grep -E '3000|8002|8003|8004|54322'
    ```
 
 3. **Check disk space:**
@@ -226,7 +226,7 @@ docker-compose up -d --build
 
 3. **Test Kong health:**
    ```bash
-   curl http://YOUR_NAS_IP:8001/health
+   curl http://YOUR_NAS_IP:8003/health
    ```
 
 ### Application Shows Errors
