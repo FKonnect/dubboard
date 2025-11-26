@@ -39,9 +39,9 @@ Create a `.env` file in the project root with the following variables:
 
 ```bash
 # Supabase URL - Replace 'your-nas-ip' with your actual NAS IP address
-NEXT_PUBLIC_SUPABASE_URL=http://your-nas-ip:8004
-SUPABASE_PUBLIC_URL=http://your-nas-ip:8004
-API_EXTERNAL_URL=http://your-nas-ip:8004
+NEXT_PUBLIC_SUPABASE_URL=http://your-nas-ip:8010
+SUPABASE_PUBLIC_URL=http://your-nas-ip:8010
+API_EXTERNAL_URL=http://your-nas-ip:8010
 SITE_URL=http://your-nas-ip:3000
 
 # Paste the generated secrets here
@@ -90,7 +90,7 @@ docker-compose up -d
 This will start:
 - **Postgres Database** (port 54322)
 - **Supabase Studio** (port 8002) - Web UI for managing your database
-- **Kong API Gateway** (ports 8004 for API, 8003 for Admin API)
+- **Kong API Gateway** (ports 8010 for API, 8011 for Admin API)
 - **GoTrue** (Authentication service)
 - **PostgREST** (REST API)
 - **Realtime** (WebSocket server)
@@ -111,7 +111,7 @@ Once the services are running, access Supabase Studio at:
 http://your-nas-ip:8002
 ```
 
-**Note:** Studio is on port 8002, while the Supabase API (Kong) is on port 8004.
+**Note:** Studio is on port 8002, while the Supabase API (Kong) is on port 8010.
 
 You should see the Supabase Studio interface. This is where you'll:
 - View and manage your database tables
@@ -124,7 +124,7 @@ You should see the Supabase Studio interface. This is where you'll:
 1. In Supabase Studio, click on the **Settings** icon (gear icon) in the left sidebar
 2. Navigate to **API** section
 3. You'll see:
-   - **Project URL**: `http://your-nas-ip:8004` (this is your `NEXT_PUBLIC_SUPABASE_URL`)
+   - **Project URL**: `http://your-nas-ip:8010` (this is your `NEXT_PUBLIC_SUPABASE_URL`)
    - **anon/public key**: This is your `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - **service_role key**: This is your `SUPABASE_SERVICE_ROLE_KEY` (keep this secret!)
 
@@ -222,7 +222,7 @@ To test locally before deploying to your NAS:
 
 - **Check Docker logs**: Run `docker-compose logs` to see error messages
 - **Verify environment variables**: Make sure all required variables are set in `.env`
-- **Check port conflicts**: Ensure ports 8004, 8003, 3000, and 54322 aren't already in use
+- **Check port conflicts**: Ensure ports 8010, 8011, 3000, and 54322 aren't already in use
 - **Database initialization**: If Postgres fails to start, try removing the volume: `docker-compose down -v` (WARNING: This deletes all data!)
 
 ### Database Connection Fails
@@ -231,12 +231,12 @@ To test locally before deploying to your NAS:
 - **Verify environment variables**: Double-check your `.env` file has the correct values
 - **Check Studio access**: Try accessing `http://your-nas-ip:8002` in your browser
 - **Check migrations**: Make sure you ran the SQL migration in Step 0.6
-- **Firewall**: Ensure ports 8004, 8003, and 3000 are open on your NAS
+- **Firewall**: Ensure ports 8010, 8011, and 3000 are open on your NAS
 - **Network connectivity**: If services can't communicate, check Docker network: `docker network inspect dubboard_dubboard-network`
 
 ### Docker Issues
 
-- **Port conflicts**: Make sure ports 3000, 8004, 8003, and 54322 aren't already in use
+- **Port conflicts**: Make sure ports 3000, 8010, 8011, and 54322 aren't already in use
 - **Build errors**: Try `docker-compose build --no-cache` to rebuild from scratch
 - **Permissions**: Make sure Docker has proper permissions on your NAS
 - **Memory issues**: Supabase requires significant resources. Ensure your NAS has enough RAM (recommended: 4GB+)
@@ -282,8 +282,8 @@ Your self-hosted Supabase instance includes:
 
 - **Postgres** (port 54322): The main database
 - **Studio** (port 8002): Web UI for database management
-- **Kong** (port 8004): API Gateway that routes requests to services
-- **Kong Admin** (port 8003): Admin API for Kong
+- **Kong** (port 8010): API Gateway that routes requests to services
+- **Kong Admin** (port 8011): Admin API for Kong
 - **GoTrue**: Authentication service (handles user signup/login)
 - **PostgREST**: Automatically generates REST API from your database schema
 - **Realtime**: WebSocket server for real-time features

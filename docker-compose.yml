@@ -46,7 +46,7 @@ services:
       DEFAULT_ORGANIZATION_NAME: ${DEFAULT_ORGANIZATION_NAME:-Default Organization}
       DEFAULT_PROJECT_NAME: ${DEFAULT_PROJECT_NAME:-Default Project}
       SUPABASE_URL: http://kong:8000
-      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:-http://localhost:8004}
+      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:-http://localhost:8010}
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
     depends_on:
@@ -63,8 +63,8 @@ services:
     image: kong:2.8.1
     container_name: supabase_kong_dubboard
     ports:
-      - "8004:8000"  # Proxy port (for API access)
-      - "8003:8001"  # Admin API port
+      - "8010:8000"  # Proxy port (for API access)
+      - "8011:8001"  # Admin API port
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
@@ -110,7 +110,7 @@ services:
     environment:
       GOTRUE_API_HOST: 0.0.0.0
       GOTRUE_API_PORT: 9999
-      API_EXTERNAL_URL: ${API_EXTERNAL_URL:-http://localhost:8004}
+      API_EXTERNAL_URL: ${API_EXTERNAL_URL:-http://localhost:8010}
       GOTRUE_DB_DRIVER: postgres
       GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
       GOTRUE_SITE_URL: ${SITE_URL:-http://localhost:3000}
