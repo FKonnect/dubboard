@@ -13,9 +13,9 @@ let toastCount = 0
 const toasts: Toast[] = []
 const listeners: Array<(toasts: Toast[]) => void> = []
 
-function addToast(toast: Omit<Toast, 'id'>) {
+function addToast(toastData: Omit<Toast, 'id'>) {
   const id = `toast-${toastCount++}`
-  const newToast = { ...toast, id }
+  const newToast = { ...toastData, id }
   toasts.push(newToast)
   listeners.forEach(listener => listener([...toasts]))
   
@@ -25,6 +25,11 @@ function addToast(toast: Omit<Toast, 'id'>) {
   }, 5000)
   
   return id
+}
+
+// Standalone toast function that can be imported directly
+export function toast({ title, description, variant = 'default' }: Omit<Toast, 'id'>) {
+  return addToast({ title, description, variant })
 }
 
 function removeToast(id: string) {

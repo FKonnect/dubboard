@@ -6,9 +6,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { CalendarEvent } from '@/app/calendar/page'
 
+type EventFormData = Omit<CalendarEvent, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+
 interface EventFormProps {
   event?: CalendarEvent
-  onSubmit: (event: Omit<CalendarEvent, 'id' | 'user_id' | 'created_at' | 'updated_at'> | Partial<CalendarEvent>) => void
+  onSubmit: (event: EventFormData) => void
   onCancel: () => void
   onDelete?: () => void
 }
