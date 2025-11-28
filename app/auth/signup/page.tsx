@@ -30,9 +30,11 @@ export default function SignUpPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('Sign up form submitted', { email, hasPassword: !!password })
 
     // Check if Supabase client was created successfully
     if (!supabase) {
+      console.error('Supabase client is null')
       toast({
         title: 'Configuration Error',
         description: 'Supabase is not configured. Please check your environment variables (NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY) in your .env.local file.',
@@ -60,8 +62,16 @@ export default function SignUpPage() {
     }
 
     setLoading(true)
+    console.log('Attempting to sign up user...')
 
     try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      console.log('Supabase config:', { 
+        url: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : 'missing',
+        hasKey: !!supabaseKey 
+      })
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -70,7 +80,10 @@ export default function SignUpPage() {
         },
       })
 
+      console.log('Sign up response:', { data: data ? { user: !!data.user, session: !!data.session } : null, error })
+
       if (error) {
+        console.error('Sign up error:', error)
         // Check for common configuration errors
         let errorMessage = error.message
         if (error.message.includes('JSON') || error.message.includes('DOCTYPE')) {
@@ -82,15 +95,43 @@ export default function SignUpPage() {
           variant: 'destructive',
         })
       } else if (data.user) {
+        console.log('User created successfully:', data.user.id)
+        
+        // Check if a session was returned (user is automatically logged in)
+        if (data.session) {
+          // User is confirmed and logged in automatically
         toast({
           title: 'Success',
-          description: 'Account created! You can now sign in.',
+            description: 'Account created! Redirecting to dashboard...',
         })
-        // Auto-login after signup
         router.push('/dashboard')
         router.refresh()
+        } else {
+          // User created but needs email confirmation
+          console.log('User created but no session - email confirmation may be required')
+          toast({
+            title: 'Account Created',
+            description: 'Please check your email to confirm your account, then sign in.',
+            variant: 'default',
+          })
+          // Redirect to login page after a short delay
+          setTimeout(() => {
+            router.push('/auth/login')
+          }, 2000)
+        }
+      } else {
+        console.warn('Sign up completed but no user data returned')
+        toast({
+          title: 'Warning',
+          description: 'Sign up completed but no user data was returned. Please try signing in.',
+          variant: 'default',
+        })
+        setTimeout(() => {
+          router.push('/auth/login')
+        }, 2000)
       }
     } catch (error: any) {
+      console.error('Sign up exception:', error)
       let errorMessage = 'An unexpected error occurred'
       
       // Handle JSON parsing errors (usually means HTML was returned instead of JSON)

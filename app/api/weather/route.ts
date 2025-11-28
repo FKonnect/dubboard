@@ -36,8 +36,14 @@ export async function GET(request: NextRequest) {
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
+      console.error('OpenWeatherMap API error:', response.status, errorData)
       return NextResponse.json(
-        { error: errorData.message || 'Failed to fetch weather data' },
+        { 
+          error: errorData.message || 'Failed to fetch weather data',
+          details: response.status === 401 
+            ? 'Invalid API key or key not yet activated (new keys take up to 2 hours)'
+            : undefined
+        },
         { status: response.status }
       )
     }

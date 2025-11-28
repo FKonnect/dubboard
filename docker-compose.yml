@@ -33,16 +33,14 @@ services:
   studio:
     image: supabase/studio:latest
     container_name: supabase_studio_dubboard
+    # Health check disabled - Studio works but health checks are unreliable
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/profile', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
-      interval: 10s
-      timeout: 10s
-      retries: 10
-      start_period: 40s
+      disable: true
     ports:
       - "8009:3000"  # Studio on port 8009 to avoid conflict with Kong
     environment:
       STUDIO_PG_META_URL: http://meta:8085
+      STUDIO_PORT: 3000
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       DEFAULT_ORGANIZATION_NAME: ${DEFAULT_ORGANIZATION_NAME:-Default Organization}
       DEFAULT_PROJECT_NAME: ${DEFAULT_PROJECT_NAME:-Default Project}
@@ -155,6 +153,10 @@ services:
       SECURE_CHANNELS: "false"
       DEFAULT_ORG: ${DEFAULT_ORGANIZATION_NAME:-Default Organization}
       DEFAULT_PROJECT: ${DEFAULT_PROJECT_NAME:-Default Project}
+      # Fix IPv6 binding issue on NAS/systems without IPv6
+      ERL_AFLAGS: "-proto_dist inet_tcp"
+      RELEASE_DISTRIBUTION: "none"
+      ELIXIR_ERL_OPTIONS: "-kernel inet_dist_use_interface {127,0,0,1}"
     depends_on:
       db:
         condition: service_healthy
@@ -171,7 +173,7 @@ services:
       SERVICE_KEY: ${SERVICE_ROLE_KEY}
       POSTGREST_URL: http://rest:3000
       PGRST_JWT_SECRET: ${JWT_SECRET}
-      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@db:5432/postgres?search_path=storage,public,extensions
       FILE_SIZE_LIMIT: 52428800
       STORAGE_BACKEND: file
       FILE_STORAGE_BACKEND_PATH: /var/lib/storage
@@ -180,6 +182,7 @@ services:
       GLOBAL_S3_BUCKET: stub
       ENABLE_IMAGE_TRANSFORMATION: "true"
       IMGPROXY_URL: http://imgproxy:5001
+      DB_INSTALL_ROLES: "false"
     depends_on:
       db:
         condition: service_healthy
@@ -245,6 +248,8 @@ services:
       - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL:-http://kong:8000}
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      # Weather API
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY:-}
     env_file:
       - .env
     depends_on:

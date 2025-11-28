@@ -50,11 +50,20 @@ export default function LoginPage() {
 
       if (error) {
         let errorMessage = error.message
-        if (error.message.includes('JSON') || error.message.includes('DOCTYPE')) {
+        
+        // Provide user-friendly error messages
+        if (error.message.includes('Email not confirmed') || error.message.includes('email_not_confirmed')) {
+          errorMessage = 'Please check your email and click the confirmation link before signing in.'
+        } else if (error.message.includes('Invalid login credentials') || error.message.includes('invalid_credentials')) {
+          errorMessage = 'Invalid email or password. Please check your credentials and try again.'
+        } else if (error.message.includes('JSON') || error.message.includes('DOCTYPE')) {
           errorMessage = 'Unable to connect to Supabase. Please check that the service is running.'
+        } else if (error.message.includes('400')) {
+          errorMessage = 'Unable to sign in. This could mean your email is not confirmed or your credentials are incorrect.'
         }
+        
         toast({
-          title: 'Error',
+          title: 'Sign In Failed',
           description: errorMessage,
           variant: 'destructive',
         })

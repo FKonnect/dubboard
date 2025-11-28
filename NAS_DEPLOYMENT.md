@@ -35,6 +35,9 @@ SUPABASE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}
 # Optional Settings
 JWT_EXP=3600
 DISABLE_SIGNUP=false
+# Set to true to automatically confirm users (no email confirmation needed)
+# Set to false to require email confirmation before users can log in
+MAILER_AUTOCONFIRM=true
 DEFAULT_ORGANIZATION_NAME=Default Organization
 DEFAULT_PROJECT_NAME=Default Project
 PGRST_DB_SCHEMAS=public,storage,graphql_public
@@ -152,13 +155,13 @@ All containers should show "Up" status.
 
 ### 4.4 Access Supabase Studio
 
-1. Navigate to: `http://YOUR_NAS_IP:8002`
+1. Navigate to: `http://YOUR_NAS_IP:8009`
 2. You should see the Supabase Studio interface
 3. Use this to manage your database, run migrations, and view data
 
 ### 4.5 Run Database Migrations (if not done)
 
-1. In Supabase Studio (`http://YOUR_NAS_IP:8002`), go to SQL Editor
+1. In Supabase Studio (`http://YOUR_NAS_IP:8009`), go to SQL Editor
 2. Run the migration files in order:
    - `supabase/migrations/002_fix_schema_migrations_index.sql`
    - `supabase/migrations/001_initial_schema.sql`
@@ -171,7 +174,7 @@ Ensure these ports are open on your NAS:
 - **3000**: Next.js application
 - **8010**: Supabase API (Kong)
 - **8011**: Kong Admin API
-- **8002**: Supabase Studio
+- **8009**: Supabase Studio
 - **54322**: PostgreSQL (optional, for direct DB access)
 
 ### 5.2 Router Port Forwarding (Optional)
@@ -241,6 +244,95 @@ docker-compose up -d --build
    docker-compose up -d --build app
    ```
 
+### 404 Not Found Error
+
+**Error:** `GET https://dubboard.dubclouds.synology.me/ 404 (Not Found)`
+
+**Cause:** The reverse proxy isn't forwarding requests to the Next.js app, or the app container isn't running.
+
+**Solution:**
+
+1. **Check if the app container is running:**
+   ```bash
+   docker-compose ps
+   ```
+   Look for the `app` container - it should show "Up" status.
+
+2. **Check app container logs:**
+   ```bash
+   docker-compose logs app
+   ```
+   Look for errors or startup issues.
+
+3. **Verify the app is accessible directly:**
+   ```bash
+   # Test if the app responds on port 3000
+   curl http://localhost:3000
+   # Or from another machine on your network:
+   curl http://YOUR_NAS_IP:3000
+   ```
+
+4. **Check Synology Reverse Proxy Configuration:**
+   - Open **Control Panel** → **Application Portal** → **Reverse Proxy**
+   - Find the rule for `dubboard.dubclouds.synology.me`
+   - Verify:
+     - **Source Protocol:** HTTPS
+     - **Source Hostname:** `dubboard.dubclouds.synology.me`
+     - **Source Port:** 443 (or your HTTPS port)
+     - **Destination Protocol:** HTTP
+     - **Destination Hostname:** `localhost` (or your NAS IP like `10.0.0.112`)
+     - **Destination Port:** `3000`
+   - If the rule doesn't exist, create it:
+     - Click **Create** → **Reverse Proxy Rule**
+     - Fill in the above settings
+     - Save and apply
+
+5. **Restart the app container:**
+   ```bash
+   docker-compose restart app
+   ```
+
+6. **If the app still doesn't work, rebuild it:**
+   ```bash
+   docker-compose up -d --build app
+   ```
+
+### Mixed Content Error (HTTPS/HTTP Mismatch)
+
+**Error:** `Mixed Content: The page at 'https://...' was loaded over HTTPS, but requested an insecure resource 'http://...'`
+
+**Cause:** Your application is accessed via HTTPS, but `NEXT_PUBLIC_SUPABASE_URL` is configured with HTTP.
+
+**Solution:**
+
+1. **If using Synology Reverse Proxy:**
+   - Set up a reverse proxy rule for port 8010 (Supabase API)
+   - Use a subdomain like `api.dubclouds.synology.me` or `dubboard-api.dubclouds.synology.me`
+   - Configure it to forward to `http://localhost:8010` with HTTPS enabled
+
+2. **Update your `.env` file:**
+   ```bash
+   # Change from HTTP to HTTPS
+   NEXT_PUBLIC_SUPABASE_URL=https://api.dubclouds.synology.me
+   # Or if using same domain with different port:
+   # NEXT_PUBLIC_SUPABASE_URL=https://dubboard.dubclouds.synology.me:8010
+   
+   SUPABASE_PUBLIC_URL=https://api.dubclouds.synology.me
+   API_EXTERNAL_URL=https://api.dubclouds.synology.me
+   SITE_URL=https://dubboard.dubclouds.synology.me
+   ```
+
+3. **Rebuild and restart the app:**
+   ```bash
+   docker-compose up -d --build app
+   ```
+
+4. **Verify the fix:**
+   - Check browser console - no more mixed content errors
+   - Test login/signup functionality
+
+**Alternative (Development Only):** If you can't set up HTTPS for the API immediately, you can temporarily access your app via HTTP (`http://dubboard.dubclouds.synology.me`) instead of HTTPS. However, this is **not recommended for production**.
+
 ### Studio Won't Load
 
 1. **Wait longer** - Studio takes 1-2 minutes to start
@@ -258,6 +350,49 @@ docker-compose up -d --build
 - **Increase NAS resources:** Ensure your NAS has at least 4GB RAM
 - **Check container resources:** Use `docker stats` to monitor usage
 - **Optimize database:** Run `VACUUM` in PostgreSQL if needed
+
+### 400 Bad Request Error When Signing In
+
+**Error**: `POST /auth/v1/token?grant_type=password 400 (Bad Request)`
+
+**Problem**: Users can't sign in after creating an account because email confirmation is required, but no SMTP server is configured.
+
+**Solution**:
+
+1. **Enable auto-confirmation** by adding to your `.env` file:
+   ```env
+   MAILER_AUTOCONFIRM=true
+   ```
+
+2. **Restart the auth service**:
+   ```bash
+   docker-compose restart auth
+   ```
+
+3. **Confirm existing users** (if you already have unconfirmed users):
+
+   **On Linux/Mac:**
+   ```bash
+   chmod +x scripts/confirm-users.sh
+   ./scripts/confirm-users.sh
+   ```
+
+   **On Windows (PowerShell):**
+   ```powershell
+   .\scripts\confirm-users.ps1
+   ```
+
+   **Or manually via SQL:**
+   ```bash
+   docker exec -it supabase_db_dubboard psql -U supabase_admin -d postgres -c "UPDATE auth.users SET email_confirmed_at = NOW() WHERE email_confirmed_at IS NULL;"
+   ```
+
+   **To confirm a specific user by email:**
+   ```bash
+   docker exec -it supabase_db_dubboard psql -U supabase_admin -d postgres -c "UPDATE auth.users SET email_confirmed_at = NOW() WHERE email = 'user@example.com';"
+   ```
+   
+   **Note**: `confirmed_at` is a generated column in Supabase, so we only update `email_confirmed_at`.
 
 ## Maintenance
 
